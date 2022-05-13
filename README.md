@@ -286,19 +286,55 @@ Deleting outdated charts
 
 That should put you to the point where you can now push this repo, and have argo sync it.
 
-## Prepare kafka repo
+### Preparing your own kafka repo
+
 For sake of simplicity and future automation, you can use the [github cli](https://cli.github.com/) to create a repo.
 You may need to specify --private, --public, or --internal flag when creating it. 
+
+Example:
 ```
-$ gh repo create argo-and-kafka-example --private 
-✓ Created repository some_user/argo-and-kafka-example on GitHub
+export NEW_REPO_NAME="my-argo-and-kafka-example"
+export GITHUB_USERNAME="cloudymax"
+export GIT_HOST="https://github.com/"
+
+gh repo create $NEW_REPO_NAME --private 
+
+✓ Created repository cloudymax/my-argo-and-kafka-example on GitHub
 ```
 
-## Add kafka to ArgoCD
+Now lets rename the example repo to "upstream", add our new repo as the origin,
+then push our local work to the repo we just created:
 
-Create an SSH key pair, and then paste the public key into the deploy key section of your GitHub repo.
-
-Make sure you have argocd cli installed, and then you can run (with `~/id_rsa_argo_deploy` being your newly created SSH key pair from the previous step):
 ```bash
-$ argocd repo add git@github.com:jessebot/argo-kafka-example/charts/kafka --insecure-ignore-host-key --ssh-private-key-path ~/id_rsa_argo_deploy
+git remote rename origin upstream
+git remote add origin "${GIT_HOST}${GITHUB_USERNAME}/${NEW_REPO_NAME}"
+git push origin main
+```
+
+Create an SSH key pair, these are the argo deplyment keys 
+
+```bash
+export DEPLOY_KEY_NAME="argo-key"
+yes |ssh-keygen -b 2048 -f ~/"${DEPLOY_KEY_NAME}" -t rsa -q -N ""
+```
+
+Next, add the public key (key-name.pub) into the deploy-keys section of your GitHub repo.
+
+```bash
+gh repo deploy-key add ~/$DEPLOY_KEY_NAME.pub \
+	--title "argoCD deploy key"
+	--repo "${GIT_HOST}${GITHUB_USERNAME}/{$NEW_REPO_NAME}
+
+✓ Deploy key added to cloudymax/my-argo-and-kafka-example
+```
+
+### Deploy kafka from your repo
+
+Note: You don't need the port-forward option if you arent running the GUI
+```bash
+export CHART="tree/main/charts/kafka"
+argocd repo add "${GIT_HOST}${GITHUB_USERNAME}/{$NEW_REPO_NAME}/${CHART}" \
+	--port-forward
+	--insecure-ignore-host-key \
+	--ssh-private-key-path "$DEPLOY_KEY_NAME"
 ```

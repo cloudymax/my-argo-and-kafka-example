@@ -1,3 +1,5 @@
+# Fork of: github.com/jessebot/argo-kafka-example
+
 # Kubernetes, ArgoCD, and Kafka
 Just a quick example of how to set up a test Kuberentes (k8s) environment with KIND, and then using ArgoCD as our Continuous Delivery to test deploy a Kafka helm chart :) I'm writing this in mid-May 2022, and I make no promises for people trying to do legacy work, or proceed in the future. If it's not mid-May 2022, ymmv.
 
